@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
   try {
     // Create transporter
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.GMAIL_USER,
@@ -143,11 +143,3 @@ export default async function handler(req, res) {
     res.status(500).json({ success: false, message: 'Error sending emails' });
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '4mb',
-    },
-  },
-};
