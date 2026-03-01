@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import emailjs from '@emailjs/browser';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -47,36 +46,39 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // EmailJS parameters for the requested format
-      const templateParams = {
-        name: formData.name,
-        company: formData.company,
-        email: formData.email,
-        service_required: formData.serviceRequired,
-        message: formData.message,
-        to_email: 'goodledgerfinancialpartners@gmail.com'
-      };
-      
-      // Replace these with actual EmailJS service ID, template ID, and public key
-      await emailjs.send(
-        'YOUR_SERVICE_ID', // Replace with your EmailJS service ID
-        'YOUR_TEMPLATE_ID', // Replace with your EmailJS template ID
-        templateParams,
-        'YOUR_PUBLIC_KEY' // Replace with your EmailJS public key
-      );
-      
-      setSubmitSuccess(true);
-      setFormData({
-        name: '',
-        company: '',
-        email: '',
-        serviceRequired: '',
-        message: ''
+      // Send data to backend API
+      const response = await fetch('/api/sendEmail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          company: formData.company,
+          email: formData.email,
+          service: formData.serviceRequired,
+          message: formData.message,
+        }),
       });
-      setTimeout(() => setSubmitSuccess(false), 5000);
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setSubmitSuccess(true);
+        setFormData({
+          name: '',
+          company: '',
+          email: '',
+          serviceRequired: '',
+          message: ''
+        });
+        setTimeout(() => setSubmitSuccess(false), 5000);
+      } else {
+        throw new Error(result.message || 'Failed to send email');
+      }
     } catch (error) {
       console.error('Error sending email:', error);
-      alert('There was an error sending your message. Please try again or contact us directly at goodledgerfinancialpartners@gmail.com');
+      setErrors(prev => ({ ...prev, submit: error.message || 'There was an error sending your message. Please try again or contact us directly at goodledgerfinancialpartners@gmail.com' }));
     } finally {
       setIsSubmitting(false);
     }
@@ -194,7 +196,12 @@ const Contact = () => {
 
                 {submitSuccess && (
                   <div className="success-message">
-                    Thank you. Our team will contact you shortly.
+                    Message sent successfully
+                  </div>
+                )}
+                {errors.submit && (
+                  <div className="error-message">
+                    {errors.submit}
                   </div>
                 )}
                 <button 
